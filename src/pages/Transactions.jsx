@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import {
   Search,
   Plus,
@@ -7,10 +7,14 @@ import {
   ChevronUp,
   ChevronDown,
   RotateCcw,
+  Download,
+  FileJson,
+  FileSpreadsheet,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { CATEGORIES, CATEGORY_COLORS } from '../data/mockData'
 import TransactionModal from '../components/Transactions/TransactionModal'
+import { exportCSV, exportJSON } from '../utils/export'
 
 function sortTransactions(list, sortBy) {
   const [field, dir] = sortBy.split('-')
@@ -30,6 +34,18 @@ export default function TransactionsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editTxn, setEditTxn] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  const exportRef = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (exportRef.current && !exportRef.current.contains(e.target)) {
+        setExportOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const isAdmin = role === 'admin'
 
@@ -96,14 +112,46 @@ export default function TransactionsPage() {
             {filtered.length} of {transactions.length} transactions
           </p>
         </div>
-        {isAdmin && (
-          <button
-            onClick={() => { setEditTxn(null); setModalOpen(true) }}
-            className="btn-primary flex items-center gap-2 flex-shrink-0"
-          >
-            <Plus size={16} /> Add Transaction
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Export dropdown */}
+          <div className="relative" ref={exportRef}>
+            <button
+              onClick={() => setExportOpen((o) => !o)}
+              className="btn-secondary flex items-center gap-2"
+              disabled={filtered.length === 0}
+            >
+              <Download size={15} /> Export
+              <ChevronDown size={13} />
+            </button>
+            {exportOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-20 overflow-hidden">
+                <button
+                  onClick={() => { exportCSV(filtered); setExportOpen(false) }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <FileSpreadsheet size={15} className="text-emerald-500" />
+                  Export as CSV
+                </button>
+                <button
+                  onClick={() => { exportJSON(filtered); setExportOpen(false) }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <FileJson size={15} className="text-amber-500" />
+                  Export as JSON
+                </button>
+              </div>
+            )}
+          </div>
+
+          {isAdmin && (
+            <button
+              onClick={() => { setEditTxn(null); setModalOpen(true) }}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus size={16} /> Add Transaction
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
