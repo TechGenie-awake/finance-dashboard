@@ -1,15 +1,21 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { INITIAL_TRANSACTIONS, getNextId } from '../data/mockData'
+import {
+  apiFetchTransactions,
+  apiAddTransaction,
+  apiUpdateTransaction,
+  apiDeleteTransaction,
+} from '../api/mockApi'
 
 const useStore = create(
   persist(
     (set, get) => ({
-      // Auth / Role
-      role: 'viewer', // 'viewer' | 'admin'
+      // ── Auth / Role ────────────────────────────────────────────────────────
+      role: 'viewer',
       setRole: (role) => set({ role }),
 
-      // Dark Mode
+      // ── Dark Mode ──────────────────────────────────────────────────────────
       darkMode: false,
       toggleDarkMode: () =>
         set((s) => {
@@ -19,24 +25,56 @@ const useStore = create(
           return { darkMode: next }
         }),
 
-      // Transactions
+      // ── Transactions ───────────────────────────────────────────────────────
       transactions: INITIAL_TRANSACTIONS,
-      addTransaction: (txn) =>
-        set((s) => ({
-          transactions: [{ ...txn, id: getNextId() }, ...s.transactions],
-        })),
-      updateTransaction: (id, updates) =>
-        set((s) => ({
-          transactions: s.transactions.map((t) =>
-            t.id === id ? { ...t, ...updates } : t
-          ),
-        })),
-      deleteTransaction: (id) =>
-        set((s) => ({
-          transactions: s.transactions.filter((t) => t.id !== id),
-        })),
+      loading: false,
+      error: null,
 
-      // Filters
+      /** Simulates an initial API fetch (e.g. on app mount) */
+      fetchTransactions: async () => {
+        set({ loading: true, error: null })
+        try {
+          const data = await apiFetchTransactions(get().transactions)
+          set({ transactions: data, loading: false })
+        } catch (err) {
+          set({ error: err.message || 'Failed to fetch transactions', loading: false })
+        }
+      },
+
+      addTransaction: async (txn) => {
+        set({ loading: true, error: null })
+        try {
+          const payload = { ...txn, id: getNextId() }
+          const data = await apiAddTransaction(get().transactions, payload)
+          set({ transactions: data, loading: false })
+        } catch (err) {
+          set({ error: err.message || 'Failed to add transaction', loading: false })
+        }
+      },
+
+      updateTransaction: async (id, updates) => {
+        set({ loading: true, error: null })
+        try {
+          const data = await apiUpdateTransaction(get().transactions, id, updates)
+          set({ transactions: data, loading: false })
+        } catch (err) {
+          set({ error: err.message || 'Failed to update transaction', loading: false })
+        }
+      },
+
+      deleteTransaction: async (id) => {
+        set({ loading: true, error: null })
+        try {
+          const data = await apiDeleteTransaction(get().transactions, id)
+          set({ transactions: data, loading: false })
+        } catch (err) {
+          set({ error: err.message || 'Failed to delete transaction', loading: false })
+        }
+      },
+
+      clearError: () => set({ error: null }),
+
+      // ── Filters ────────────────────────────────────────────────────────────
       filters: {
         search: '',
         type: 'all',
@@ -52,6 +90,13 @@ const useStore = create(
     }),
     {
       name: 'finance-store',
+      // Don't persist loading/error – those are transient
+      partialize: (s) => ({
+        role: s.role,
+        darkMode: s.darkMode,
+        transactions: s.transactions,
+        filters: s.filters,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state?.darkMode) document.documentElement.classList.add('dark')
       },
