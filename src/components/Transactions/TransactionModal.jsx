@@ -56,16 +56,13 @@ export default function TransactionModal({ open, onClose, editTxn }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
-          <h2 className="text-base font-semibold text-slate-800 dark:text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-card-md w-full max-w-md">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">
             {editTxn ? 'Edit Transaction' : 'Add Transaction'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-300 hover:text-gray-600 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -81,9 +78,9 @@ export default function TransactionModal({ open, onClose, editTxn }) {
                 className={`flex-1 py-2 text-sm font-medium capitalize transition-colors ${
                   form.type === t
                     ? t === 'expense'
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-emerald-500 text-white'
-                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                      ? 'bg-red-500 text-white'
+                      : 'bg-accent text-white'
+                    : 'text-gray-400 hover:bg-gray-50'
                 }`}
               >
                 {t}
@@ -92,7 +89,7 @@ export default function TransactionModal({ open, onClose, editTxn }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-gray-600 mb-1">
               Description
             </label>
             <input
@@ -108,7 +105,7 @@ export default function TransactionModal({ open, onClose, editTxn }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-gray-600 mb-1">
                 Amount ($)
               </label>
               <input
@@ -125,7 +122,7 @@ export default function TransactionModal({ open, onClose, editTxn }) {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-gray-600 mb-1">
                 Date
               </label>
               <input
@@ -141,7 +138,7 @@ export default function TransactionModal({ open, onClose, editTxn }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-gray-600 mb-1">
               Category
             </label>
             <select

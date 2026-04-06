@@ -81,13 +81,9 @@ export default function TransactionsPage() {
     const active = isAsc || isDesc
     return (
       <button
-        onClick={() =>
-          setFilter('sortBy', isDesc ? `${field}-asc` : `${field}-desc`)
-        }
+        onClick={() => setFilter('sortBy', isDesc ? `${field}-asc` : `${field}-desc`)}
         className={`flex items-center gap-1 text-xs font-medium ${
-          active
-            ? 'text-indigo-600 dark:text-indigo-400'
-            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+          active ? 'text-accent' : 'text-gray-400 hover:text-gray-700'
         }`}
       >
         {label}
@@ -101,14 +97,12 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800 dark:text-white">
-            Transactions
-          </h1>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-gray-900">Transactions</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
             {filtered.length} of {transactions.length} transactions
           </p>
         </div>
@@ -124,17 +118,17 @@ export default function TransactionsPage() {
               <ChevronDown size={13} />
             </button>
             {exportOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-20 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-100 rounded-xl shadow-card-md z-20 overflow-hidden">
                 <button
                   onClick={() => { exportCSV(filtered); setExportOpen(false) }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <FileSpreadsheet size={15} className="text-emerald-500" />
+                  <FileSpreadsheet size={15} className="text-accent" />
                   Export as CSV
                 </button>
                 <button
                   onClick={() => { exportJSON(filtered); setExportOpen(false) }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <FileJson size={15} className="text-amber-500" />
                   Export as JSON
@@ -209,90 +203,86 @@ export default function TransactionsPage() {
       {/* Table */}
       <div className="card p-0 overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-16 text-center text-slate-400 dark:text-slate-500">
-            <p className="text-lg mb-1">No transactions found</p>
+          <div className="py-16 text-center text-gray-400">
+            <p className="text-base mb-1">No transactions found</p>
             <p className="text-sm">Try adjusting your filters</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                  <th className="text-left px-4 py-3">
-                    <SortBtn field="date" label="Date" />
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-5 py-3"><SortBtn field="date" label="Date" /></th>
+                  <th className="text-left px-5 py-3"><SortBtn field="description" label="Merchant" /></th>
+                  <th className="text-left px-5 py-3 hidden sm:table-cell">
+                    <span className="text-xs font-medium text-gray-400">Category</span>
                   </th>
-                  <th className="text-left px-4 py-3">
-                    <SortBtn field="description" label="Description" />
+                  <th className="text-left px-5 py-3 hidden md:table-cell">
+                    <span className="text-xs font-medium text-gray-400">Type</span>
                   </th>
-                  <th className="text-left px-4 py-3 hidden sm:table-cell">
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                      Category
-                    </span>
-                  </th>
-                  <th className="text-left px-4 py-3 hidden md:table-cell">
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                      Type
-                    </span>
-                  </th>
-                  <th className="text-right px-4 py-3">
-                    <SortBtn field="amount" label="Amount" />
+                  <th className="text-right px-5 py-3"><SortBtn field="amount" label="Amount" /></th>
+                  <th className="text-right px-5 py-3">
+                    <span className="text-xs font-medium text-gray-400">Status</span>
                   </th>
                   {isAdmin && (
-                    <th className="text-right px-4 py-3">
-                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Actions
-                      </span>
+                    <th className="text-right px-5 py-3">
+                      <span className="text-xs font-medium text-gray-400">Actions</span>
                     </th>
                   )}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((txn, i) => (
+                {filtered.map((txn) => (
                   <tr
                     key={txn.id}
-                    className={`border-b border-slate-50 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${
-                      i % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-slate-800/20'
-                    }`}
+                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    <td className="px-5 py-3.5 text-gray-400 text-xs whitespace-nowrap">
                       {new Date(txn.date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
+                        month: 'short', day: 'numeric', year: 'numeric',
                       })}
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-200 max-w-[180px] truncate">
-                      {txn.description}
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                          style={{ backgroundColor: CATEGORY_COLORS[txn.category] || '#6366f1' }}
+                        >
+                          {txn.description[0]}
+                        </div>
+                        <span className="font-medium text-gray-700 text-xs truncate max-w-[140px]">
+                          {txn.description}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
+                    <td className="px-5 py-3.5 hidden sm:table-cell">
                       <span className="flex items-center gap-1.5">
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ backgroundColor: CATEGORY_COLORS[txn.category] || '#6366f1' }}
                         />
-                        <span className="text-slate-500 dark:text-slate-400 text-xs">
-                          {txn.category}
-                        </span>
+                        <span className="text-gray-400 text-xs">{txn.category}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
+                    <td className="px-5 py-3.5 hidden md:table-cell">
                       <span className={txn.type === 'income' ? 'badge-income' : 'badge-expense'}>
                         {txn.type}
                       </span>
                     </td>
-                    <td className={`px-4 py-3 text-right font-semibold whitespace-nowrap ${
-                      txn.type === 'income'
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-rose-600 dark:text-rose-400'
+                    <td className={`px-5 py-3.5 text-right font-semibold text-sm whitespace-nowrap ${
+                      txn.type === 'income' ? 'text-accent' : 'text-gray-800'
                     }`}>
-                      {txn.type === 'income' ? '+' : '-'}${txn.amount.toLocaleString()}
+                      {txn.type === 'income' ? '+' : ''}${txn.amount.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <span className="text-xs font-medium text-accent">Success</span>
                     </td>
                     {isAdmin && (
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => { setEditTxn(txn); setModalOpen(true) }}
-                            className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-300 hover:text-accent hover:bg-green-50 rounded-lg transition-colors"
                             title="Edit"
                           >
                             <Pencil size={14} />
@@ -301,8 +291,8 @@ export default function TransactionsPage() {
                             onClick={() => handleDelete(txn.id)}
                             className={`p-1.5 rounded-lg transition-colors ${
                               deleteConfirm === txn.id
-                                ? 'bg-rose-500 text-white'
-                                : 'text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30'
+                                ? 'bg-red-500 text-white'
+                                : 'text-gray-300 hover:text-red-500 hover:bg-red-50'
                             }`}
                             title={deleteConfirm === txn.id ? 'Click again to confirm' : 'Delete'}
                           >

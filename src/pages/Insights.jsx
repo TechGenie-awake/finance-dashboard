@@ -139,10 +139,8 @@ export default function InsightsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-800 dark:text-white">Insights</h1>
-        <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5">
-          Smart observations from your financial data
-        </p>
+        <h1 className="text-xl font-semibold text-gray-900">Insights</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Smart observations from your financial data</p>
       </div>
 
       {/* Key Insights */}
@@ -205,8 +203,8 @@ export default function InsightsPage() {
               tickFormatter={(v) => `$${v / 1000}k`}
             />
             <Tooltip content={<CustomBarTooltip />} />
-            <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

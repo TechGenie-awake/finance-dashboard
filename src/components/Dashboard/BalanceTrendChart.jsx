@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react'
 import {
   AreaChart,
   Area,
@@ -6,44 +7,54 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts'
+import { SlidersHorizontal } from 'lucide-react'
 
-function buildMonthlyData(transactions) {
+const PERIODS = ['1W', '1M', '6M', '1Y']
+
+function buildData(transactions, period) {
+  const now = new Date()
+  let cutoff = new Date(0)
+  if (period === '1W') cutoff = new Date(now - 7 * 86400000)
+  else if (period === '1M') cutoff = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+  else if (period === '6M') cutoff = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate())
+  else if (period === '1Y') cutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+
+  const filtered = transactions.filter((t) => new Date(t.date) >= cutoff)
+
   const months = {}
-
-  transactions.forEach((t) => {
+  filtered.forEach((t) => {
     const d = new Date(t.date)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    if (!months[key]) months[key] = { income: 0, expenses: 0 }
-    if (t.type === 'income') months[key].income += t.amount
-    else months[key].expenses += t.amount
+    if (!months[key]) months[key] = { revenue: 0, spend: 0 }
+    if (t.type === 'income') months[key].revenue += t.amount
+    else months[key].spend += t.amount
   })
 
-  const sorted = Object.entries(months).sort(([a], [b]) => a.localeCompare(b))
-
-  let runningBalance = 0
-  return sorted.map(([key, { income, expenses }]) => {
-    runningBalance += income - expenses
-    const [year, month] = key.split('-')
-    const label = new Date(Number(year), Number(month) - 1).toLocaleDateString(
-      'en-US',
-      { month: 'short', year: '2-digit' }
-    )
-    return { month: label, income, expenses, balance: runningBalance }
-  })
+  return Object.entries(months)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, { revenue, spend }]) => {
+      const [year, month] = key.split('-')
+      return {
+        label: new Date(Number(year), Number(month) - 1).toLocaleDateString('en-US', { month: 'short', year: period === '1Y' ? '2-digit' : undefined }),
+        revenue,
+        spend,
+      }
+    })
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
-  const fmt = (v) => `$${v.toLocaleString()}`
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-3 text-sm">
-      <p className="font-semibold text-slate-700 dark:text-white mb-2">{label}</p>
+    <div className="bg-white border border-gray-100 rounded-xl shadow-card-md p-3 text-xs">
+      <p className="font-semibold text-gray-700 mb-1.5">{label}</p>
       {payload.map((p) => (
-        <p key={p.dataKey} style={{ color: p.color }} className="flex justify-between gap-6">
-          <span className="capitalize">{p.name}</span>
-          <span className="font-medium">{fmt(p.value)}</span>
+        <p key={p.dataKey} className="flex items-center justify-between gap-5">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+            <span className="text-gray-500 capitalize">{p.name}</span>
+          </span>
+          <span className="font-semibold text-gray-800">${p.value.toLocaleString()}</span>
         </p>
       ))}
     </div>
@@ -51,83 +62,89 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function BalanceTrendChart({ transactions }) {
-  const data = buildMonthlyData(transactions)
-
-  if (data.length === 0) {
-    return (
-      <div className="card h-72 flex items-center justify-center text-slate-400 dark:text-slate-500">
-        No data to display
-      </div>
-    )
-  }
+  const [period, setPeriod] = useState('6M')
+  const data = useMemo(() => buildData(transactions, period), [transactions, period])
 
   return (
     <div className="card">
-      <h2 className="text-base font-semibold text-slate-700 dark:text-white mb-4">
-        Monthly Overview
-      </h2>
-      <ResponsiveContainer width="100%" height={260}>
-        <AreaChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.5} />
-          <XAxis
-            dataKey="month"
-            tick={{ fontSize: 12, fill: '#94a3b8' }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 12, fill: '#94a3b8' }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v) => `$${v / 1000}k`}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }}
-            formatter={(v) => (
-              <span className="text-slate-600 dark:text-slate-400 capitalize">{v}</span>
-            )}
-          />
-          <Area
-            type="monotone"
-            dataKey="income"
-            name="Income"
-            stroke="#10b981"
-            strokeWidth={2}
-            fill="url(#colorIncome)"
-          />
-          <Area
-            type="monotone"
-            dataKey="expenses"
-            name="Expenses"
-            stroke="#ef4444"
-            strokeWidth={2}
-            fill="url(#colorExpenses)"
-          />
-          <Area
-            type="monotone"
-            dataKey="balance"
-            name="Balance"
-            stroke="#6366f1"
-            strokeWidth={2}
-            fill="url(#colorBalance)"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-sm font-semibold text-gray-800">Spend Activity</h2>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-gray-50 rounded-xl p-0.5">
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  period === p
+                    ? 'bg-white shadow-sm text-gray-800'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <button className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 border border-gray-200 rounded-xl px-3 py-1.5">
+            <SlidersHorizontal size={12} /> Filter
+          </button>
+        </div>
+      </div>
+
+      {data.length === 0 ? (
+        <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+          No data for this period
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={260}>
+          <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.12} />
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `$${v >= 1000 ? `${v / 1000}k` : v}`}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              name="Revenue"
+              stroke="#22c55e"
+              strokeWidth={2}
+              fill="url(#revGrad)"
+              dot={false}
+              activeDot={{ r: 4, fill: '#22c55e', stroke: 'white', strokeWidth: 2 }}
+            />
+            <Area
+              type="monotone"
+              dataKey="spend"
+              name="Spend"
+              stroke="#ef4444"
+              strokeWidth={2}
+              fill="url(#spendGrad)"
+              dot={false}
+              activeDot={{ r: 4, fill: '#ef4444', stroke: 'white', strokeWidth: 2 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      )}
     </div>
   )
 }

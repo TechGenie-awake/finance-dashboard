@@ -1,4 +1,6 @@
 import useStore from '../store/useStore'
+import BalanceCard from '../components/Dashboard/BalanceCard'
+import CashflowCard from '../components/Dashboard/CashflowCard'
 import SummaryCards from '../components/Dashboard/SummaryCards'
 import BalanceTrendChart from '../components/Dashboard/BalanceTrendChart'
 import SpendingBreakdownChart from '../components/Dashboard/SpendingBreakdownChart'
@@ -8,20 +10,23 @@ export default function DashboardPage() {
   const transactions = useStore((s) => s.transactions)
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-800 dark:text-white">
-          Dashboard
-        </h1>
-        <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5">
-          Your financial overview at a glance
-        </p>
+    <div className="space-y-4 max-w-7xl mx-auto">
+      {/* Row 1: Balance + Cashflow */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <BalanceCard transactions={transactions} />
+        </div>
+        <div>
+          <CashflowCard transactions={transactions} />
+        </div>
       </div>
 
+      {/* Row 2: Account cards */}
       <SummaryCards transactions={transactions} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        <div className="xl:col-span-2">
+      {/* Row 3: Spend Activity + Spending breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
           <BalanceTrendChart transactions={transactions} />
         </div>
         <div>
@@ -29,6 +34,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Row 4: Recent Transactions */}
       <RecentTransactions transactions={transactions} />
     </div>
   )
